@@ -1,53 +1,38 @@
 #include "monty.h"
-stack_t *head = NULL;
 
 /**
- * main - Entry Point
- * @argc: Number of command line arguments.
- * @argv: An array containing the arguments.
- * Return: Always Zero.
+ * main - main function
+ * @argc: arguments count
+ * @argv: arguments traverse (file path expected)
+ * Return: 0 always - success!
  */
+
 int main(int argc, char **argv)
 {
-	if (argc < 2 || argc > 2)
-		err(1);
-	open_file(argv[1]);
-	free_nodes();
-	return (0);
-}
+	trave_t *traverse = NULL;
+	size_t n;
+	void (*execute)(stack_t **stack, unsigned int line_number);
 
-/**
- * free_nodes - Frees nodes in the stack.
- */
-void free_nodes(void)
-{
-	stack_t *tmp;
+	if (argc != 2)
+		_error(ERROR_USAGE_FILE);
 
-	if (head == NULL)
-		return;
+	built_in();
+	traverse->filename = argv[1];
+	traverse->file = fopen(traverse->filename, "r");
 
-	while (head != NULL)
+	if (traverse->file == NULL)
+		_error(ERROR_OPEN_FILE);
+	while (getline(&traverse->line, &n, traverse->file) > 0)
 	{
-		tmp = head;
-		head = head->next;
-		free(tmp);
+		traverse->line_num++;
+
+		if (_parse(traverse->line) == EXIT_FAILURE)
+			continue;
+
+		execute = _opcode();
+		execute(&traverse->stack, traverse->line_num);
 	}
-}
-
-/**
- * create_node - Creates and populates a node.
- * @n: Number to go inside the node.
- * Return: Upon sucess a pointer to the node. Otherwise NULL.
- */
-stack_t *create_node(int n)
-{
-	stack_t *node;
-
-	node = malloc(sizeof(stack_t));
-	if (node == NULL)
-		err(4);
-	node->next = NULL;
-	node->prev = NULL;
-	node->n = n;
-	return (node);
+	free(traverse);
+	_free();
+	return (EXIT_SUCCESS);
 }
